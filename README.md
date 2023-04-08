@@ -18,7 +18,7 @@ jobs:
     name: Chat
     runs-on: ubuntu-latest
     steps:
-      - use: snnaplab/openai-chat-on-issues@v0.1.0
+      - uses: snnaplab/openai-chat-on-issues@v0.1.0
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
           model: 'gpt-3.5-turbo'
