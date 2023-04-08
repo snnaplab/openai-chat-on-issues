@@ -1,0 +1,29 @@
+name: 'OpenAI Chat on Issues'
+description: 'This is a GitHub Actions for running OpenAI's chat in GitHub Issues.'
+inputs:
+  openai-key:
+    description: ''
+    required: true
+  model:
+    description: ''
+    required: false
+    default: 'gpt-3.5-turbo'
+  history:
+    description: ''
+    required: false
+    default: '5'
+  event-name:
+    description: ''
+    required: false
+    default: ${{ github.event_name }}
+  event:
+    description: ''
+    default: ${{ toJson(github.event) }}
+    required: false
+  github-token:
+    description: ''
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
