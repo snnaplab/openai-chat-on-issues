@@ -34,7 +34,7 @@ async function main() {
   }
 
   // 主要な項目だけ存在をチェック
-  if (!event.action || !event.issue?.number || !event.comment?.id || !event.repository?.full_name) {
+  if (!event.action || !event.issue?.number || !event.repository?.full_name) {
     throw new Error('event input is not a valid JSON string.');
   }
 
