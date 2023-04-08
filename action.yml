@@ -1,5 +1,5 @@
 name: 'OpenAI Chat on Issues'
-description: 'This is a GitHub Actions for running OpenAI's chat in GitHub Issues.'
+description: 'This is a GitHub Actions for running OpenAI''s chat in GitHub Issues.'
 author: 'Hiroyuki Kusu'
 branding:
   icon: 'aperture'
