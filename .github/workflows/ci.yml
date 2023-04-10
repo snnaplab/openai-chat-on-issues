@@ -47,7 +47,7 @@ jobs:
             {
               "action": "opened",
               "issue": {
-                "number": 1,
+                "number": 4,
                 "state": "open",
                 "body": "Hello, who are you?"
               },
