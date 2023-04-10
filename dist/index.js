@@ -18331,11 +18331,11 @@ function getInputs() {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
       history: 10,
-      eventName: 'issue_comment',
+      eventName: 'issues',
       eventJson: JSON.stringify({
-        action: 'created',
+        action: 'opened',
         issue: {
-          number: 1,
+          number: 4,
           state: 'open',
           body: 'こんにちは。あなたは誰ですか？',
           pull_request: null,
