@@ -52,6 +52,6 @@ jobs:
                 "body": "Hello, who are you?"
               },
               "repository": {
-                "full_name": "${{ github.repository}}}"
+                "full_name": "${{ github.repository }}"
               }
             }
