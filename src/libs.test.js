@@ -37,7 +37,7 @@ describe('Github and OpenAI API functions', () => {
     const githubToken = 'test-github-token';
 
     nock('https://api.github.com')
-      .post(`/repos/test-owner/test-repo/issues/1/comments`, { body: comment })
+      .post('/repos/test-owner/test-repo/issues/1/comments', { body: comment })
       .reply(201, {});
 
     await postIssueComment(repository, issueNumber, comment, githubToken);
@@ -49,7 +49,7 @@ describe('Github and OpenAI API functions', () => {
     const githubToken = 'test-github-token';
 
     nock('https://api.github.com')
-      .get(`/repos/test-owner/test-repo/issues/1/comments`)
+      .get('/repos/test-owner/test-repo/issues/1/comments')
       .query({ per_page: 100, page: 1 })
       .reply(200, [
         {
@@ -57,8 +57,8 @@ describe('Github and OpenAI API functions', () => {
           body: 'This is a test comment.',
         },
       ]);
-      nock('https://api.github.com')
-      .get(`/repos/test-owner/test-repo/issues/1/comments`)
+    nock('https://api.github.com')
+      .get('/repos/test-owner/test-repo/issues/1/comments')
       .query({ per_page: 100, page: 2 })
       .reply(200, []);
 
