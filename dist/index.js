@@ -17907,7 +17907,7 @@ function wrappy (fn, cb) {
 const github = __nccwpck_require__(5438);
 const { Configuration, OpenAIApi } = __nccwpck_require__(9211);
 
-async function postChatMessage(model, userMessage, openaiKey) {
+async function postChatMessages(model, messages, openaiKey) {
   const configuration = new Configuration({
     apiKey: openaiKey,
   });
@@ -17916,7 +17916,7 @@ async function postChatMessage(model, userMessage, openaiKey) {
   try {
     const completion = await openai.createChatCompletion({
       model: model,
-      messages: [{role: "user", content: userMessage}],
+      messages: messages,
     });
     return completion.data.choices[0].message.content;
   } catch(e) {
@@ -17950,10 +17950,43 @@ async function postIssueComment(repository, number, comment, githubToken) {
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
-    })
+    });
   } catch (e) {
     handleGitHubError(e);
   }
+}
+
+async function getIssueComments(repository, number, githubToken) {
+  const [owner, repo] = repository.split('/');
+  const octokit = github.getOctokit(githubToken);
+  const perPage = 100;
+  let page = 1;
+  let comments = [];
+
+  for (;;) {
+    try {
+      // https://docs.github.com/ja/rest/issues/comments?apiVersion=2022-11-28#list-issue-comments
+      const res = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}/comments{?per_page,page}', {
+        owner: owner,
+        repo: repo,
+        issue_number: number,
+        per_page: perPage,
+        page: page,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+
+      if (res.data.length == 0) break;
+      comments = comments.concat(res.data);
+      page++;
+
+    } catch (e) {
+      handleGitHubError(e);
+    }
+  }
+
+  return comments;
 }
 
 function handleGitHubError(e) {
@@ -17987,16 +18020,12 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
-//function getMatchedFiles(files, paths, adds, modifies, renames, removes) {
-//  return files.filter(file => isMatchedPaths(file, paths.map(trimQuotes)))
-//    .filter(file => isMatchedStatus(file, adds, modifies, renames, removes));
-//}
-
 module.exports = {
-  postChatMessage,
+  postChatMessages,
   handleOpenAiError,
   createOpenAiErrorMessage,
   postIssueComment,
+  getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
 };
@@ -18214,7 +18243,7 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186);
-const { postChatMessage, postIssueComment } = __nccwpck_require__(6429);
+const { postChatMessages, postIssueComment, getIssueComments } = __nccwpck_require__(6429);
 
 (__nccwpck_require__(2437).config)();
 
@@ -18259,7 +18288,7 @@ async function main() {
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment();
+      await handleIssueComment(model, history, event, openaiKey, githubToken);
       break;
     }
     default: {
@@ -18271,39 +18300,51 @@ async function main() {
 async function handleIssues(model, event, openaiKey, githubToken) {
   if (event.action != 'opened') return;
 
-  const message = await postChatMessage(model, event.issue.body, openaiKey);
-  await postIssueComment(event.repository.full_name, event.issue.number, message, githubToken);
+  const reqMessages = [{role: 'user', content: event.issue.body}];
+  const resMessage = await postChatMessages(model, reqMessages, openaiKey);
+  await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
-async function handleIssueComment(model, event, openaiKey, githubToken) {
+async function handleIssueComment(model, history, event, openaiKey, githubToken) {
   if (event.action != 'created') return;
   if (event.issue.state != 'open') return;
   if (event.issue.pull_request) return;
+  
+  // idの昇順（コメントの古い順）で取得される
+  const issueComments = await getIssueComments(event.repository.full_name, event.issue.number, githubToken);
 
-  // TODO
+  const reqMessages = issueComments
+    .filter(comment => comment.id <= event.comment.id) // 自身のコメントとそれより古いコメント
+    .slice(-(history + 1)) // 自身のコメント含む、新しいhistory+1件
+    .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
+
+  // Issueのbodyはhistoryの数に関係なく1件目に
+  reqMessages.unshift({role: 'user', content: event.issue.body});
+
+  const resMessage = await postChatMessages(model, reqMessages, openaiKey);
+  await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
 function getInputs() {
-  if (NODE_ENV == 'local') {
+  if (NODE_ENV == 'development') {
     return {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
-      history: 5,
+      history: 10,
       eventName: 'issues',
       eventJson: JSON.stringify({
         action: 'opened',
         issue: {
-          number: 33,
+          number: 4,
           state: 'open',
           body: 'こんにちは。あなたは誰ですか？',
-          pull_request: {},
+          pull_request: null,
         },
         comment: {
-          id: 99999999,
-          body: 'コメント body',
+          id: 9999999999,
         },
         repository: {
-          full_name: 'yumemi/hkusu-android-danger-test',
+          full_name: 'snnaplab/openai-chat-on-issues',
         },
       }),
       githubToken: GITHUB_TOKEN,
@@ -18315,7 +18356,7 @@ function getInputs() {
     // { required: true } を指定すると、空文字が指定された場合にもエラーとなってくれる
     openaiKey: core.getInput('openai-key', { required: true }),
     model: core.getInput('model', { required: true }), // 空文字を指定されるとデフォルト値が得られないので、デフォルト値を定義していたとしても { required: true } による必須チェックが必要
-    history: parseInt(core.getInput('history', { required: true })) || 5,
+    history: parseInt(core.getInput('history', { required: true })) || 10,
     eventName: core.getInput('event-name', { required: true }),
     eventJson: core.getInput('event', { required: true }),
     githubToken: core.getInput('github-token', { required: true }),

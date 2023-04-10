@@ -1,7 +1,7 @@
 const github = require('@actions/github');
-const { Configuration, OpenAIApi } = require("openai");
+const { Configuration, OpenAIApi } = require('openai');
 
-async function postChatMessage(model, userMessage, openaiKey) {
+async function postChatMessages(model, messages, openaiKey) {
   const configuration = new Configuration({
     apiKey: openaiKey,
   });
@@ -10,7 +10,7 @@ async function postChatMessage(model, userMessage, openaiKey) {
   try {
     const completion = await openai.createChatCompletion({
       model: model,
-      messages: [{role: "user", content: userMessage}],
+      messages: messages,
     });
     return completion.data.choices[0].message.content;
   } catch(e) {
@@ -44,10 +44,43 @@ async function postIssueComment(repository, number, comment, githubToken) {
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
-    })
+    });
   } catch (e) {
     handleGitHubError(e);
   }
+}
+
+async function getIssueComments(repository, number, githubToken) {
+  const [owner, repo] = repository.split('/');
+  const octokit = github.getOctokit(githubToken);
+  const perPage = 100;
+  let page = 1;
+  let comments = [];
+
+  for (;;) {
+    try {
+      // https://docs.github.com/ja/rest/issues/comments?apiVersion=2022-11-28#list-issue-comments
+      const res = await octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}/comments{?per_page,page}', {
+        owner: owner,
+        repo: repo,
+        issue_number: number,
+        per_page: perPage,
+        page: page,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+
+      if (res.data.length == 0) break;
+      comments = comments.concat(res.data);
+      page++;
+
+    } catch (e) {
+      handleGitHubError(e);
+    }
+  }
+
+  return comments;
 }
 
 function handleGitHubError(e) {
@@ -81,16 +114,12 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
-//function getMatchedFiles(files, paths, adds, modifies, renames, removes) {
-//  return files.filter(file => isMatchedPaths(file, paths.map(trimQuotes)))
-//    .filter(file => isMatchedStatus(file, adds, modifies, renames, removes));
-//}
-
 module.exports = {
-  postChatMessage,
+  postChatMessages,
   handleOpenAiError,
   createOpenAiErrorMessage,
   postIssueComment,
+  getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
 };

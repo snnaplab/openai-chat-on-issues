@@ -15,7 +15,7 @@ inputs:
   history:
     description: ''
     required: false
-    default: '5'
+    default: '10'
   event-name:
     description: ''
     required: false
