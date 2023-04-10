@@ -42,7 +42,7 @@ jobs:
         uses: ./
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
-          event-name: ''
+          event-name: 'issues'
           event: |
             {
               "action": "opened",
