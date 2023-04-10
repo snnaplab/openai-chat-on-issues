@@ -18326,7 +18326,7 @@ async function handleIssueComment(model, history, event, openaiKey, githubToken)
 }
 
 function getInputs() {
-  if (NODE_ENV == 'local') {
+  if (NODE_ENV == 'development') {
     return {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
@@ -18335,14 +18335,13 @@ function getInputs() {
       eventJson: JSON.stringify({
         action: 'created',
         issue: {
-          number: 3,
+          number: 1,
           state: 'open',
           body: 'こんにちは。あなたは誰ですか？',
           pull_request: null,
         },
         comment: {
           id: 9999999999,
-          body: 'コメント body',
         },
         repository: {
           full_name: 'snnaplab/openai-chat-on-issues',

@@ -16,9 +16,9 @@
   "scripts": {
     "lint": "eslint .",
     "test": "jest",
-    "local": "NODE_ENV=local node src/main.js",
     "package": "ncc build src/main.js -o dist --source-map --license licenses.txt",
-    "all": "npm run lint && npm run test && npm run local && npm run package"
+    "check-all": "npm run lint && npm run test && npm run package",
+    "dev": "NODE_ENV=development node src/main.js"
   },
   "dependencies": {
     "@actions/core": "^1.10.0",
