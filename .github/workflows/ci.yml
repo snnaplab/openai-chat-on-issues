@@ -24,7 +24,7 @@ jobs:
       - name: Run tasks
         run: |
           npm ci
-          npm run check-all
+          npm run check
       - name: Check dist directory for no changes # dist/index.js のコミットが漏れていないか
         run: |
           if [ "$(git diff --ignore-space-at-eol dist/ | wc -l)" != '0' ]; then
@@ -42,6 +42,9 @@ jobs:
         uses: ./
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
+          system-prompt: |
+            - Please reply in Japanese.
+            - Answer like an old man.
           event-name: 'issues'
           event: |
             {

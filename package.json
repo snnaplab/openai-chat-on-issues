@@ -1,6 +1,6 @@
 {
   "name": "openai-chat-on-issues",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "This is a GitHub Actions for running OpenAI's chat in GitHub Issues.",
   "main": "src/main.js",
   "author": "Hiroyuki Kusu <kusu0806@gmail.com>",
@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "test": "jest",
     "package": "ncc build src/main.js -o dist --source-map --license licenses.txt",
-    "check-all": "npm run lint && npm run test && npm run package",
+    "check": "npm run lint && npm run test && npm run package",
     "dev": "NODE_ENV=development node src/main.js"
   },
   "dependencies": {

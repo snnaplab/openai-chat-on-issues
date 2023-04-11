@@ -19,6 +19,9 @@ async function postChatMessages(model, messages, openaiKey) {
 }
 
 function handleOpenAiError(e) {
+  if (e?.response?.data?.error?.code == 'context_length_exceeded') {
+    throw new TokenLengthError(createOpenAiErrorMessage(e, e?.response?.data?.error?.message));
+  }
   throw Error(createOpenAiErrorMessage(e, e?.response?.data?.error?.message));
 }
 
@@ -74,7 +77,6 @@ async function getIssueComments(repository, number, githubToken) {
       if (res.data.length == 0) break;
       comments = comments.concat(res.data);
       page++;
-
     } catch (e) {
       handleGitHubError(e);
     }
@@ -114,6 +116,8 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
+class TokenLengthError extends Error {}
+
 module.exports = {
   postChatMessages,
   handleOpenAiError,
@@ -122,4 +126,5 @@ module.exports = {
   getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
+  TokenLengthError,
 };

@@ -12,10 +12,9 @@ inputs:
     description: ''
     required: false
     default: 'gpt-3.5-turbo'
-  history:
+  system-prompt:
     description: ''
     required: false
-    default: '10'
   event-name:
     description: ''
     required: false
