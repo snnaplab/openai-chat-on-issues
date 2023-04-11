@@ -22,11 +22,6 @@ async function main() {
     githubToken,
   } = getInputs();
 
-  // 現在はこの２つのみ対応
-  if (model != 'gpt-3.5-turbo' && model != 'gpt-4') {
-    throw new Error('model input must be gpt-3.5-turbo or gpt-4.');
-  }
-  
   let event;
   try {
     event = JSON.parse(eventJson);
@@ -98,9 +93,9 @@ function getInputs() {
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
       history: 100,
-      eventName: 'issue_comment',
+      eventName: 'issues',
       eventJson: JSON.stringify({
-        action: 'created',
+        action: 'opened',
         issue: {
           number: 4,
           state: 'open',
