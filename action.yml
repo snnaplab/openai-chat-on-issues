@@ -15,10 +15,6 @@ inputs:
   system-prompt:
     description: ''
     required: false
-  history:
-    description: ''
-    required: false
-    default: '10'
   event-name:
     description: ''
     required: false

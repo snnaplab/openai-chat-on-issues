@@ -16,7 +16,6 @@ async function main() {
     openaiKey,
     model,
     systemPrompt,
-    history,
     eventName,
     eventJson,
     githubToken,
@@ -40,7 +39,7 @@ async function main() {
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment(model, systemPrompt, history, event, openaiKey, githubToken);
+      await handleIssueComment(model, systemPrompt, event, openaiKey, githubToken);
       break;
     }
     default: {
@@ -62,7 +61,7 @@ async function handleIssues(model, systemPrompt, event, openaiKey, githubToken) 
   await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
-async function handleIssueComment(model, systemPrompt, history, event, openaiKey, githubToken) {
+async function handleIssueComment(model, systemPrompt, event, openaiKey, githubToken) {
   if (event.action != 'created') return;
   if (event.issue.state != 'open') return;
   if (event.issue.pull_request) return;
@@ -109,7 +108,6 @@ function getInputs() {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
-      history: 100,
       eventName: 'issue_comment',
       eventJson: JSON.stringify({
         action: 'created',
@@ -136,7 +134,6 @@ function getInputs() {
     openaiKey: core.getInput('openai-key', { required: true }),
     model: core.getInput('model', { required: true }), // 空文字を指定されるとデフォルト値が得られないので、デフォルト値を定義していたとしても { required: true } による必須チェックが必要
     systemPrompt: core.getInput('system-prompt', { required: false }),
-    history: parseInt(core.getInput('history', { required: true })) || 10,
     eventName: core.getInput('event-name', { required: true }),
     eventJson: core.getInput('event', { required: true }),
     githubToken: core.getInput('github-token', { required: true }),
