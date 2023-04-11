@@ -17925,6 +17925,9 @@ async function postChatMessages(model, messages, openaiKey) {
 }
 
 function handleOpenAiError(e) {
+  if (e?.response?.data?.error?.code == 'context_length_exceeded') {
+    throw new TokenLengthError(createOpenAiErrorMessage(e, e?.response?.data?.error?.message));
+  }
   throw Error(createOpenAiErrorMessage(e, e?.response?.data?.error?.message));
 }
 
@@ -17980,7 +17983,6 @@ async function getIssueComments(repository, number, githubToken) {
       if (res.data.length == 0) break;
       comments = comments.concat(res.data);
       page++;
-
     } catch (e) {
       handleGitHubError(e);
     }
@@ -18020,6 +18022,8 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
+class TokenLengthError extends Error {}
+
 module.exports = {
   postChatMessages,
   handleOpenAiError,
@@ -18028,6 +18032,7 @@ module.exports = {
   getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
+  TokenLengthError,
 };
 
 
@@ -18243,7 +18248,7 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186);
-const { postChatMessages, postIssueComment, getIssueComments } = __nccwpck_require__(6429);
+const { postChatMessages, postIssueComment, getIssueComments, TokenLengthError } = __nccwpck_require__(6429);
 
 (__nccwpck_require__(2437).config)();
 
@@ -18314,20 +18319,37 @@ async function handleIssueComment(model, systemPrompt, history, event, openaiKey
   // idの昇順（コメントの古い順）で取得される
   const issueComments = await getIssueComments(event.repository.full_name, event.issue.number, githubToken);
 
-  let reqMessages = issueComments
-    .filter(comment => comment.id <= event.comment.id) // 自身のコメントとそれより古いコメント
-    .slice(-(history + 1)) // 自身のコメント含む、新しいhistory+1件
-    .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
+  let retryCount = 0;
+  for (;;) {
+    let reqMessages = issueComments
+      .filter(comment => comment.id <= event.comment.id) // 自身のコメントとそれより古いコメント
+      .slice(retryCount) // トークンの長さエラーでリトライする度に、古いコメントを削除する
+      .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
 
-  // Issueのbodyはhistoryの数に関係なく1件目に
-  reqMessages = [{role: 'user', content: event.issue.body}, ...reqMessages];
+    // 1件目はIssueのbody
+    reqMessages = [{role: 'user', content: event.issue.body}, ...reqMessages];
 
-  if (systemPrompt) {
-    reqMessages = [{role: 'system', content: systemPrompt}, ...reqMessages];
+    if (systemPrompt) {
+      reqMessages = [{role: 'system', content: systemPrompt}, ...reqMessages];
+    }
+
+    try {
+      const resMessage = await postChatMessages(model, reqMessages, openaiKey);
+      await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
+      break;
+    } catch(e) {
+      if (e instanceof TokenLengthError) {
+        // Issueのbodyのみでトークンの長さエラーとなる場合は、もうリトライせずエラーとする
+        if (reqMessages.filter(message => message.role == 'user').length <= 1) {
+          throw e;
+        }
+        retryCount++;
+        continue;
+      } else {
+        throw e;
+      }
+    }
   }
-
-  const resMessage = await postChatMessages(model, reqMessages, openaiKey);
-  await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
 function getInputs() {
@@ -18337,9 +18359,9 @@ function getInputs() {
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
       history: 100,
-      eventName: 'issues',
+      eventName: 'issue_comment',
       eventJson: JSON.stringify({
-        action: 'opened',
+        action: 'created',
         issue: {
           number: 4,
           state: 'open',
