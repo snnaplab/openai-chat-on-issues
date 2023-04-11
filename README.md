@@ -21,5 +21,7 @@ jobs:
       - uses: snnaplab/openai-chat-on-issues@v0
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
-          model: 'gpt-3.5-turbo'
+          model: 'gpt-4' # default: gpt-3.5-turbo
+          system-prompt: | # option
+            You are a helpful assistant.
 ```
