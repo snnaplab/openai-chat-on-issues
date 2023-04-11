@@ -42,6 +42,9 @@ jobs:
         uses: ./
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
+          system-prompt: |
+            - Please reply in Japanese.
+            - Answer like an old man.
           event-name: 'issues'
           event: |
             {
