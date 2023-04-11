@@ -17,7 +17,7 @@
     "lint": "eslint .",
     "test": "jest",
     "package": "ncc build src/main.js -o dist --source-map --license licenses.txt",
-    "check-all": "npm run lint && npm run test && npm run package",
+    "check": "npm run lint && npm run test && npm run package",
     "dev": "NODE_ENV=development node src/main.js"
   },
   "dependencies": {
