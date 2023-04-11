@@ -12,6 +12,9 @@ inputs:
     description: ''
     required: false
     default: 'gpt-3.5-turbo'
+  system-prompt:
+    description: ''
+    required: false
   history:
     description: ''
     required: false

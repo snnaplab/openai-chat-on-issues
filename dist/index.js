@@ -18259,6 +18259,7 @@ async function main() {
   const {
     openaiKey,
     model,
+    systemPrompt,
     history,
     eventName,
     eventJson,
@@ -18284,11 +18285,11 @@ async function main() {
 
   switch (eventName) {
     case 'issues': {
-      await handleIssues(model, event, openaiKey, githubToken);
+      await handleIssues(model, systemPrompt, event, openaiKey, githubToken);
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment(model, history, event, openaiKey, githubToken);
+      await handleIssueComment(model, systemPrompt, history, event, openaiKey, githubToken);
       break;
     }
     default: {
@@ -18297,15 +18298,20 @@ async function main() {
   }
 }
 
-async function handleIssues(model, event, openaiKey, githubToken) {
+async function handleIssues(model, systemPrompt, event, openaiKey, githubToken) {
   if (event.action != 'opened') return;
 
-  const reqMessages = [{role: 'user', content: event.issue.body}];
+  let reqMessages = [{role: 'user', content: event.issue.body}];
+
+  if (systemPrompt) {
+    reqMessages = [{role: 'system', content: systemPrompt}, ...reqMessages];
+  }
+
   const resMessage = await postChatMessages(model, reqMessages, openaiKey);
   await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
-async function handleIssueComment(model, history, event, openaiKey, githubToken) {
+async function handleIssueComment(model, systemPrompt, history, event, openaiKey, githubToken) {
   if (event.action != 'created') return;
   if (event.issue.state != 'open') return;
   if (event.issue.pull_request) return;
@@ -18313,13 +18319,17 @@ async function handleIssueComment(model, history, event, openaiKey, githubToken)
   // idの昇順（コメントの古い順）で取得される
   const issueComments = await getIssueComments(event.repository.full_name, event.issue.number, githubToken);
 
-  const reqMessages = issueComments
+  let reqMessages = issueComments
     .filter(comment => comment.id <= event.comment.id) // 自身のコメントとそれより古いコメント
     .slice(-(history + 1)) // 自身のコメント含む、新しいhistory+1件
     .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
 
   // Issueのbodyはhistoryの数に関係なく1件目に
-  reqMessages.unshift({role: 'user', content: event.issue.body});
+  reqMessages = [{role: 'user', content: event.issue.body}, ...reqMessages];
+
+  if (systemPrompt) {
+    reqMessages = [{role: 'system', content: systemPrompt}, ...reqMessages];
+  }
 
   const resMessage = await postChatMessages(model, reqMessages, openaiKey);
   await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
@@ -18330,10 +18340,11 @@ function getInputs() {
     return {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
-      history: 10,
-      eventName: 'issues',
+      systemPrompt: '語尾ににゃーをつけてください。',
+      history: 100,
+      eventName: 'issue_comment',
       eventJson: JSON.stringify({
-        action: 'opened',
+        action: 'created',
         issue: {
           number: 4,
           state: 'open',
@@ -18356,6 +18367,7 @@ function getInputs() {
     // { required: true } を指定すると、空文字が指定された場合にもエラーとなってくれる
     openaiKey: core.getInput('openai-key', { required: true }),
     model: core.getInput('model', { required: true }), // 空文字を指定されるとデフォルト値が得られないので、デフォルト値を定義していたとしても { required: true } による必須チェックが必要
+    systemPrompt: core.getInput('system-prompt', { required: false }),
     history: parseInt(core.getInput('history', { required: true })) || 10,
     eventName: core.getInput('event-name', { required: true }),
     eventJson: core.getInput('event', { required: true }),
