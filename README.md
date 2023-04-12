@@ -1,6 +1,8 @@
 # OpenAI Chat on Issues
 
-This is a GitHub Actions for running OpenAI's chat in GitHub Issues.
+This is a GitHub Actions for running OpenAI's chat on GitHub Issues.
+
+<img src="doc/action.png" width="500" />
 
 ## Usage
 
@@ -18,10 +20,10 @@ jobs:
     name: Chat
     runs-on: ubuntu-latest
     steps:
-      - uses: snnaplab/openai-chat-on-issues@v0
+      - uses: snnaplab/openai-chat-on-issues@v1
         with:
           openai-key: ${{ secrets.OPENAI_KEY }}
-          model: 'gpt-4' # default: gpt-3.5-turbo
+          model: 'gpt-4' # option, default is 'gpt-3.5-turbo'
           system-prompt: | # option
             You are a helpful assistant.
 ```
