@@ -1,7 +1,7 @@
 {
   "name": "openai-chat-on-issues",
   "version": "0.3.0",
-  "description": "This is a GitHub Actions for running OpenAI's chat in GitHub Issues.",
+  "description": "This is a GitHub Actions for running OpenAI's chat on GitHub Issues.",
   "main": "src/main.js",
   "author": "Hiroyuki Kusu <kusu0806@gmail.com>",
   "license": "MIT",
