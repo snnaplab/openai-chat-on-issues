@@ -16,6 +16,7 @@ async function main() {
     openaiKey,
     model,
     systemPrompt,
+    ignoreKeywords,
     eventName,
     eventJson,
     githubToken,
@@ -35,11 +36,11 @@ async function main() {
 
   switch (eventName) {
     case 'issues': {
-      await handleIssues(model, systemPrompt, event, openaiKey, githubToken);
+      await handleIssues(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment(model, systemPrompt, event, openaiKey, githubToken);
+      await handleIssueComment(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
       break;
     }
     default: {
@@ -48,8 +49,12 @@ async function main() {
   }
 }
 
-async function handleIssues(model, systemPrompt, event, openaiKey, githubToken) {
+async function handleIssues(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken) {
   if (event.action != 'opened') return;
+
+  if (ignoreKeywords.some(keyword => event.issue.body.includes(keyword))) {
+    return;
+  }
 
   let reqMessages = [{role: 'user', content: event.issue.body}];
 
@@ -61,11 +66,15 @@ async function handleIssues(model, systemPrompt, event, openaiKey, githubToken) 
   await postIssueComment(event.repository.full_name, event.issue.number, resMessage, githubToken);
 }
 
-async function handleIssueComment(model, systemPrompt, event, openaiKey, githubToken) {
+async function handleIssueComment(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken) {
   if (event.action != 'created') return;
   if (event.issue.state != 'open') return;
   if (event.issue.pull_request) return;
   
+  if (ignoreKeywords.some(keyword => event.comment.body.includes(keyword))) {
+    return;
+  }
+
   // idの昇順（コメントの古い順）で取得される
   const issueComments = await getIssueComments(event.repository.full_name, event.issue.number, githubToken);
 
@@ -73,6 +82,7 @@ async function handleIssueComment(model, systemPrompt, event, openaiKey, githubT
   for (;;) {
     let reqMessages = issueComments
       .filter(comment => comment.id <= event.comment.id) // 自身のコメントとそれより古いコメント
+      .filter(comment => ignoreKeywords.every(keyword => !comment.body.includes(keyword)))
       .slice(retryCount) // トークンの長さエラーでリトライする度に、古いコメントを削除する
       .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
 
@@ -108,20 +118,22 @@ function getInputs() {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
+      ignoreKeywords: [],
       eventName: 'issue_comment',
       eventJson: JSON.stringify({
         action: 'created',
         issue: {
-          number: 4,
+          number: 6,
           state: 'open',
-          body: 'こんにちは。あなたは誰ですか？',
+          body: 'こんにちは。あなたは誰ですか？ ignore2DDDD',
           pull_request: null,
         },
         comment: {
           id: 9999999999,
+          body: 'こんにちは。あなたは誰ですか？ ',
         },
         repository: {
-          full_name: 'snnaplab/openai-chat-on-issues',
+          full_name: 'snnaplab/action-dev',
         },
       }),
       githubToken: GITHUB_TOKEN,
@@ -134,6 +146,7 @@ function getInputs() {
     openaiKey: core.getInput('openai-key', { required: true }),
     model: core.getInput('model', { required: true }), // 空文字を指定されるとデフォルト値が得られないので、デフォルト値を定義していたとしても { required: true } による必須チェックが必要
     systemPrompt: core.getInput('system-prompt', { required: false }),
+    ignoreKeywords: core.getMultilineInput('ignore-keywords', { required: false }) || [],
     eventName: core.getInput('event-name', { required: true }),
     eventJson: core.getInput('event', { required: true }),
     githubToken: core.getInput('github-token', { required: true }),
