@@ -18004,7 +18004,7 @@ function handleGitHubError(e) {
       break;
     }
     case 404: {
-      message = createGitHubErrorMessage(e, 'Review the inputs "repository", "pull-request-number", "github-token".');
+      message = createGitHubErrorMessage(e, 'Review the inputs "event", "github-token".');
       break;
     }
     default: { // その他はここにまとめる
