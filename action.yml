@@ -15,6 +15,9 @@ inputs:
   system-prompt:
     description: ''
     required: false
+  ignore-keywords:
+    description: ''
+    required: false
   event-name:
     description: ''
     required: false

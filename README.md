@@ -114,6 +114,31 @@ jobs:
 ...
 ```
 
+### Exclude comments containing specific keywords
+
+Conversations between users, or comments you don't want AI to refer to.
+
+```yaml
+name: OpenAI Chat
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  chat:
+    name: Chat
+    runs-on: ubuntu-latest
+    steps:
+      - uses: snnaplab/openai-chat-on-issues@v1
+        with:
+          openai-key: ${{ secrets.OPENAI_KEY }}
+          ignore-keywords: | # add these
+            AI bot ignore
+```
+
 ## Required permissions
 
 `issues: write` permission is required.

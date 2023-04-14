@@ -116,6 +116,10 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
+function trimQuotes(s) {
+  return s.replace(/^['"]|['"]$/g, '');
+}
+
 class TokenLengthError extends Error {}
 
 module.exports = {
@@ -126,5 +130,6 @@ module.exports = {
   getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
+  trimQuotes,
   TokenLengthError,
 };
