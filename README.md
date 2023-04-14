@@ -47,6 +47,7 @@ on:
 concurrency: # add these
   group: ${{ github.workflow }}-${{ github.event.issue.number || github.run_id }}
   cancel-in-progress: true
+
 ...
 ```
 
@@ -127,8 +128,9 @@ on:
   issue_comment:
     types: [created]
 
-permissions: # add this
+permissions: # add these
   issues: write
+
 ...  
 ```
 
