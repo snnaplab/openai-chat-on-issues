@@ -18336,7 +18336,9 @@ async function handleIssueComment(model, systemPrompt, ignoreKeywords, event, op
       .map(comment => ({role: comment.user.type == 'Bot' ? 'assistant' : 'user', content: comment.body}));
 
     // 1件目はIssueのbody
-    reqMessages = [{role: 'user', content: event.issue.body}, ...reqMessages];
+    if (ignoreKeywords.every(keyword => !event.issue.body.includes(keyword))) {
+      reqMessages = [{role: 'user', content: event.issue.body}, ...reqMessages];
+    }
 
     if (systemPrompt) {
       reqMessages = [{role: 'system', content: systemPrompt}, ...reqMessages];
@@ -18367,7 +18369,7 @@ function getInputs() {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
-      ignoreKeywords: [],
+      ignoreKeywords: ['JavaScript', 'ignore2'],
       eventName: 'issue_comment',
       eventJson: JSON.stringify({
         action: 'created',
