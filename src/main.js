@@ -1,5 +1,5 @@
 const core = require('@actions/core');
-const { postChatMessages, postIssueComment, getIssueComments, TokenLengthError } = require('./libs');
+const { postChatMessages, postIssueComment, getIssueComments, trimQuotes, TokenLengthError } = require('./libs');
 
 require('dotenv').config();
 
@@ -36,11 +36,11 @@ async function main() {
 
   switch (eventName) {
     case 'issues': {
-      await handleIssues(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
+      await handleIssues(model, systemPrompt, ignoreKeywords.map(trimQuotes), event, openaiKey, githubToken);
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
+      await handleIssueComment(model, systemPrompt, ignoreKeywords.map(trimQuotes), event, openaiKey, githubToken);
       break;
     }
     default: {

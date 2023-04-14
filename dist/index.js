@@ -18022,6 +18022,10 @@ function createGitHubErrorMessage(e, hint) {
   return message;
 }
 
+function trimQuotes(s) {
+  return s.replace(/^['"]|['"]$/g, '');
+}
+
 class TokenLengthError extends Error {}
 
 module.exports = {
@@ -18032,6 +18036,7 @@ module.exports = {
   getIssueComments,
   handleGitHubError,
   createGitHubErrorMessage,
+  trimQuotes,
   TokenLengthError,
 };
 
@@ -18248,7 +18253,7 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
 const core = __nccwpck_require__(2186);
-const { postChatMessages, postIssueComment, getIssueComments, TokenLengthError } = __nccwpck_require__(6429);
+const { postChatMessages, postIssueComment, getIssueComments, trimQuotes, TokenLengthError } = __nccwpck_require__(6429);
 
 (__nccwpck_require__(2437).config)();
 
@@ -18285,11 +18290,11 @@ async function main() {
 
   switch (eventName) {
     case 'issues': {
-      await handleIssues(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
+      await handleIssues(model, systemPrompt, ignoreKeywords.map(trimQuotes), event, openaiKey, githubToken);
       break;
     }
     case 'issue_comment': {
-      await handleIssueComment(model, systemPrompt, ignoreKeywords, event, openaiKey, githubToken);
+      await handleIssueComment(model, systemPrompt, ignoreKeywords.map(trimQuotes), event, openaiKey, githubToken);
       break;
     }
     default: {
