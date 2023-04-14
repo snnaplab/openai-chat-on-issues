@@ -159,6 +159,11 @@ permissions: # add these
 ...  
 ```
 
+## Tips
+
+It is convenient to prepare frequently used prompts as custom templates for issues.
+ref: [Configuring issue templates for your repository](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/configuring-issue-templates-for-your-repository)
+
 ## Other topics
 
 ### Prevent jobs from starting on pull request comments
