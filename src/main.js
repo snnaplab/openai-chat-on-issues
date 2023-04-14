@@ -120,14 +120,14 @@ function getInputs() {
       openaiKey: OPENAI_TOKEN,
       model: 'gpt-3.5-turbo',
       systemPrompt: '語尾ににゃーをつけてください。',
-      ignoreKeywords: ['JavaScript', 'ignore2'],
+      ignoreKeywords: ['JavaScript'],
       eventName: 'issue_comment',
       eventJson: JSON.stringify({
         action: 'created',
         issue: {
-          number: 6,
+          number: 4,
           state: 'open',
-          body: 'こんにちは。あなたは誰ですか？ ignore2DDDD',
+          body: 'こんにちは。あなたは誰ですか？',
           pull_request: null,
         },
         comment: {
@@ -135,7 +135,7 @@ function getInputs() {
           body: 'こんにちは。あなたは誰ですか？ ',
         },
         repository: {
-          full_name: 'snnaplab/action-dev',
+          full_name: 'snnaplab/openai-chat-on-issues',
         },
       }),
       githubToken: GITHUB_TOKEN,
