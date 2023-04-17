@@ -8,6 +8,9 @@ This is a GitHub Actions for running OpenAI's chat on GitHub Issues.
 
 ### Basic usage
 
+1. Prepare a yaml file that describes the workflow below.
+2. Place it in the default branch.
+
 ```yaml
 name: OpenAI Chat
 
@@ -189,3 +192,7 @@ jobs:
       - uses: snnaplab/openai-chat-on-issues@v1
 ...
 ```
+
+## Blog post
+
+- (Japanese) [GitHub Issues を ChatGPT のようにするツールを作った話](https://zenn.dev/yumemi_inc/articles/3be60d32acbfd3)
